@@ -10,38 +10,39 @@
       background: #d4e9f5;
       min-height: 100vh;
       font-family: 'Segoe UI', Roboto, 'PingFang SC', sans-serif;
-      padding: 2rem 1.5rem;
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .container { max-width: 1200px; width: 100%; }
+    .container { max-width: 1100px; width: 100%; }
 
+    /* ========== 所有设备统一字体大小 ========== */
     .header {
       text-align: center;
-      margin-bottom: 2rem;
-      padding: 1.5rem;
+      margin-bottom: 20px;
+      padding: 18px 14px;
       background: rgba(255,255,255,0.5);
-      border-radius: 2rem;
+      border-radius: 24px;
       backdrop-filter: blur(4px);
     }
-    .header h1 { font-size: 2.2rem; color: #0a3a4a; }
-    .header p { color: #1a5770; font-size: 1.05rem; margin-top: 0.3rem; }
+    .header h1 { font-size: 24px; color: #0a3a4a; }
+    .header p { color: #1a5770; font-size: 15px; margin-top: 6px; }
 
     .mode-tabs {
       display: flex;
-      gap: 1rem;
+      gap: 12px;
       justify-content: center;
-      margin-bottom: 2rem;
+      margin-bottom: 20px;
       flex-wrap: wrap;
     }
     .mode-tab {
-      padding: 0.7rem 2rem;
+      padding: 8px 20px;
       border: 2px solid #8bc2dc;
-      border-radius: 3rem;
+      border-radius: 30px;
       background: rgba(255,255,255,0.4);
       color: #0f3b4f;
-      font-size: 1.05rem;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.25s;
@@ -51,25 +52,27 @@
 
     .table-wrapper {
       background: rgba(200,232,248,0.45);
-      border-radius: 3rem;
-      padding: 1.8rem 1.2rem;
+      border-radius: 30px;
+      padding: 16px 12px;
       border: 1px solid rgba(120,190,220,0.4);
       display: none;
+      overflow-x: auto;
     }
     .table-wrapper.active { display: block; }
     table {
       width: 100%;
       border-collapse: collapse;
       background: #f5fbfe;
-      border-radius: 2.4rem;
+      border-radius: 24px;
       overflow: hidden;
+      min-width: 500px;
     }
     th, td {
       text-align: center;
       vertical-align: middle;
-      padding: 0.4rem 0.1rem;
+      padding: 6px 4px;
       border: 1px solid #b5d8ea;
-      min-width: 56px;
+      min-width: 50px;
       transition: all 0.15s;
       cursor: pointer;
       position: relative;
@@ -89,28 +92,28 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      line-height: 1.3;
-      padding: 0.1rem 0;
+      line-height: 1.2;
+      padding: 2px 0;
       position: relative;
     }
     .chinese-char {
       font-family: 'KaiTi', 'STKaiti', '华文楷体', '楷体', serif;
-      font-size: 1.6rem;
+      font-size: 18px;
       font-weight: 600;
       color: #0a3a4a;
     }
     .pinyin-small {
-      font-size: 0.85rem;
+      font-size: 11px;
       font-weight: 400;
       color: #3a6a7a;
-      margin-top: 0.05rem;
+      margin-top: 2px;
       font-family: 'Segoe UI', Roboto, 'PingFang SC', sans-serif;
     }
     .arabic-number {
       position: absolute;
       top: 1px;
       right: 3px;
-      font-size: 0.6rem;
+      font-size: 8px;
       color: #3a6a7a;
       font-weight: 400;
       opacity: 0.7;
@@ -119,8 +122,8 @@
 
     .test-wrapper {
       background: rgba(200,232,248,0.45);
-      border-radius: 3rem;
-      padding: 2.5rem 2rem;
+      border-radius: 30px;
+      padding: 24px 20px;
       border: 1px solid rgba(120,190,220,0.4);
       display: none;
       text-align: center;
@@ -129,22 +132,21 @@
 
     .test-player {
       background: rgba(255,255,255,0.6);
-      border-radius: 2rem;
-      padding: 2rem;
-      margin-bottom: 2rem;
+      border-radius: 24px;
+      padding: 24px 20px;
+      margin-bottom: 20px;
     }
 
     .quiz-header {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1.5rem;
-      margin-bottom: 0.8rem;
+      margin-bottom: 10px;
     }
     .play-btn-plain {
       background: transparent;
       border: none;
-      font-size: 3rem;
+      font-size: 40px;
       cursor: pointer;
       transition: all 0.2s;
       color: #0f3b4f;
@@ -153,23 +155,22 @@
     }
     .play-btn-plain:hover { transform: scale(1.15); color: #1a6f8a; }
     .play-btn-plain:active { transform: scale(0.9); }
-    .play-btn-plain:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-    /* 答案显示区域 - 调小字体 */
-    .test-player .big-number {
-      font-size: 2.8rem;
+    .big-number {
+      font-size: 36px;
       font-weight: 700;
       color: #0a3a4a;
       font-family: 'KaiTi', 'STKaiti', '华文楷体', '楷体', serif;
-      min-height: 70px;
+      min-height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 0.5rem;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 6px;
     }
-    .test-player .big-number .pinyin-hint {
-      font-size: 1.1rem;
+    .big-number .pinyin-hint {
+      font-size: 18px;
       font-weight: 400;
       color: #3a6a7a;
       font-family: 'Segoe UI', Roboto, 'PingFang SC', sans-serif;
@@ -178,21 +179,22 @@
     .option-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+      gap: 12px;
       max-width: 600px;
-      margin: 1.5rem auto;
+      margin: 18px auto;
     }
     .option-btn {
-      padding: 1rem;
+      padding: 14px 8px;
       border: 2px solid #b0d8ed;
-      border-radius: 1.5rem;
+      border-radius: 18px;
       background: white;
-      font-size: 1.6rem;
+      font-size: 22px;
       font-weight: 600;
       color: #0a3a4a;
       cursor: pointer;
       transition: all 0.2s;
-      font-family: 'KaiTi', 'STKaiti', serif;
+      font-family: 'KaiTi', 'STKaiti', '华文楷体', '楷体', serif;
+      min-height: 60px;
     }
     .option-btn:hover:not(:disabled) { background: #b0d8ed; transform: scale(1.05); }
     .option-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -201,56 +203,55 @@
 
     .test-controls {
       display: flex;
-      gap: 1.2rem;
+      gap: 16px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-top: 1.5rem;
+      margin-top: 18px;
     }
     .btn {
-      padding: 0.8rem 2.2rem;
+      padding: 10px 28px;
       border: none;
-      border-radius: 3rem;
-      font-size: 1.05rem;
+      border-radius: 30px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.25s;
     }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-primary { background: #b0d8ed; color: #0f3b4f; }
     .btn-primary:hover { background: #9ccce3; }
     .btn-success { background: #7bcfa0; color: #0a3a2a; }
     .btn-success:hover { background: #65c08a; }
 
     .test-status {
-      font-size: 1.1rem;
+      font-size: 15px;
       color: #1a5770;
-      margin-top: 1.5rem;
-      min-height: 2.8rem;
+      margin-top: 18px;
+      min-height: 36px;
     }
     .score-display {
-      font-size: 1.8rem;
+      font-size: 22px;
       font-weight: 700;
       color: #0a3a4a;
-      margin-top: 1rem;
+      margin-top: 12px;
     }
     .score-detail {
-      margin-top: 1.5rem;
-      padding: 1.2rem;
+      margin-top: 18px;
+      padding: 16px;
       background: rgba(255,255,255,0.5);
-      border-radius: 1.5rem;
+      border-radius: 18px;
       display: block;
     }
     .score-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 0.6rem;
-      margin-top: 1rem;
+      gap: 6px;
+      margin-top: 10px;
     }
     .score-item {
-      padding: 0.4rem;
-      border-radius: 0.8rem;
-      font-size: 0.85rem;
+      padding: 4px;
+      border-radius: 8px;
+      font-size: 12px;
       text-align: center;
       background: rgba(255,255,255,0.6);
     }
@@ -258,22 +259,68 @@
     .score-item.wrong { background: #e8a0a0; color: #6a2020; }
 
     .footnote {
-      margin-top: 1.5rem;
+      margin-top: 16px;
       color: #1a5770;
-      font-size: 0.9rem;
+      font-size: 13px;
       opacity: 0.7;
       border-top: 1px solid #aacddf;
-      padding-top: 1.2rem;
+      padding-top: 14px;
       text-align: center;
     }
 
-    @media (max-width: 700px) {
-      .option-grid { grid-template-columns: repeat(2, 1fr); }
-      .test-player .big-number { font-size: 2.2rem; min-height: 60px; }
-      .test-player .big-number .pinyin-hint { font-size: 0.9rem; }
-      .play-btn-plain { font-size: 2.4rem; }
-      .quiz-header { gap: 1rem; }
-      .arabic-number { font-size: 0.5rem; top: 1px; right: 2px; }
+    /* ========== 平板专用（768-1024px）========== */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      body { padding: 16px 12px; }
+      .container { max-width: 100%; }
+      .header h1 { font-size: 22px; }
+      .header p { font-size: 14px; }
+      .mode-tab { font-size: 14px; padding: 6px 16px; }
+      .chinese-char { font-size: 16px; }
+      .pinyin-small { font-size: 10px; }
+      .arabic-number { font-size: 7px; }
+      th, td { padding: 4px 3px; min-width: 40px; }
+      table { min-width: 420px; }
+      .big-number { font-size: 32px; min-height: 50px; }
+      .big-number .pinyin-hint { font-size: 16px; }
+      .option-grid { grid-template-columns: repeat(2, 1fr); max-width: 420px; gap: 10px; }
+      .option-btn { font-size: 20px; padding: 12px 6px; min-height: 55px; }
+      .play-btn-plain { font-size: 36px; }
+      .btn { font-size: 14px; padding: 8px 22px; }
+      .score-display { font-size: 20px; }
+      .test-status { font-size: 14px; }
+      .footnote { font-size: 12px; }
+      .test-wrapper { padding: 20px 16px; }
+      .test-player { padding: 20px 16px; }
+    }
+
+    /* ========== 手机专用（≤767px）========== */
+    @media (max-width: 767px) {
+      body { padding: 12px 8px; }
+      .container { max-width: 100%; }
+      .header { padding: 14px 10px; }
+      .header h1 { font-size: 18px; }
+      .header p { font-size: 12px; }
+      .mode-tab { font-size: 12px; padding: 5px 12px; }
+      .chinese-char { font-size: 14px; }
+      .pinyin-small { font-size: 9px; }
+      .arabic-number { font-size: 6px; top: 0px; right: 1px; }
+      th, td { padding: 3px 2px; min-width: 32px; }
+      table { min-width: 340px; }
+      .table-wrapper { padding: 10px 6px; }
+      .test-wrapper { padding: 14px 10px; }
+      .test-player { padding: 14px 10px; }
+      .big-number { font-size: 24px; min-height: 40px; gap: 6px; }
+      .big-number .pinyin-hint { font-size: 13px; }
+      .option-grid { grid-template-columns: repeat(2, 1fr); max-width: 320px; gap: 8px; }
+      .option-btn { font-size: 16px; padding: 10px 4px; min-height: 48px; }
+      .play-btn-plain { font-size: 28px; }
+      .test-controls { gap: 8px; }
+      .btn { font-size: 12px; padding: 6px 14px; }
+      .test-status { font-size: 12px; min-height: 30px; }
+      .score-display { font-size: 16px; }
+      .score-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); }
+      .score-item { font-size: 10px; padding: 3px; }
+      .footnote { font-size: 10px; }
     }
   </style>
 </head>
@@ -302,7 +349,7 @@
   <!-- Listening Quiz -->
   <div class="test-wrapper active" id="testMode">
     <div class="test-player">
-      <div class="quiz-header" style="justify-content: center;">
+      <div class="quiz-header">
         <button class="play-btn-plain" id="playQuizAudioBtn" onclick="playCurrentAudio()" title="Play audio">▶️</button>
       </div>
 
@@ -417,19 +464,16 @@ for (let row = 0; row < 10; row++) {
     const div = document.createElement('div');
     div.className = 'cell-content';
     
-    // 中文汉字
     const ch = document.createElement('span');
     ch.className = 'chinese-char';
     ch.textContent = item.chinese;
     div.appendChild(ch);
     
-    // 拼音
     const py = document.createElement('span');
     py.className = 'pinyin-small';
     py.textContent = item.pinyin;
     div.appendChild(py);
     
-    // 阿拉伯数字（右上角）
     const arabic = document.createElement('span');
     arabic.className = 'arabic-number';
     arabic.textContent = item.num;
@@ -487,7 +531,6 @@ function nextQuestion() {
   });
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
   
-  // 清空显示区域
   document.getElementById('testChinese').innerHTML = '';
 
   const num = Math.floor(Math.random() * 100);
@@ -513,9 +556,6 @@ function nextQuestion() {
     grid.appendChild(btn);
   });
 
-  // Score 记录保持显示，不隐藏
-
-  // 🎯 自动播放当前题目的音频
   setTimeout(() => playCurrentAudio(), 300);
 }
 
@@ -543,7 +583,6 @@ function handleOptionClick(selectedNum, btnElement) {
   scoreTotal++;
   updateScore();
 
-  // 显示答案，拼音使用pinyin-hint样式
   document.getElementById('testChinese').innerHTML = `${currentQuestion.chinese}  <span class="pinyin-hint">${currentQuestion.pinyin}</span>`;
   document.getElementById('testStatus').innerHTML = isCorrect ?
     `<span id="statusText">✅ Correct! The number is ${currentQuestion.chinese} (${currentQuestion.pinyin})</span>` :
@@ -566,16 +605,13 @@ function updateScore() {
     div.textContent = `${h.num}: ${h.isCorrect ? '✅' : '❌'}`;
     grid.appendChild(div);
   });
-  // score 保持显示，不需要再添加 show 类
 }
 
 function playCurrentAudio() {
   if (!currentQuestion) {
-    // 如果没有当前题目，自动生成一个
     nextQuestion();
     return;
   }
-  // 播放时更新状态提示
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
   playAudio(currentQuestion.num, null);
 }
@@ -588,13 +624,10 @@ document.addEventListener('DOMContentLoaded', function() {
   window.nextQuestion = nextQuestion;
   window.playCurrentAudio = playCurrentAudio;
 
-  // 初始显示 score 区域
   document.getElementById('scoreDetail').style.display = 'block';
   updateScore();
 
   setTimeout(nextQuestion, 500);
-
-  console.log('📢 Audio base URL:', AUDIO_BASE_URL);
 });
 </script>
 </body>
