@@ -17,7 +17,6 @@
     }
     .container { max-width: 1100px; width: 100%; }
 
-    /* ========== 所有设备统一字体大小 ========== */
     .header {
       text-align: center;
       margin-bottom: 20px;
@@ -268,7 +267,16 @@
       text-align: center;
     }
 
-    /* ========== 平板专用（768-1024px）========== */
+    .audio-loading {
+      color: #e67e22;
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+    }
+    .audio-loading.show {
+      display: block;
+    }
+
     @media (min-width: 768px) and (max-width: 1024px) {
       body { padding: 16px 12px; }
       .container { max-width: 100%; }
@@ -293,7 +301,6 @@
       .test-player { padding: 20px 16px; }
     }
 
-    /* ========== 手机专用（≤767px）========== */
     @media (max-width: 767px) {
       body { padding: 12px 8px; }
       .container { max-width: 100%; }
@@ -337,7 +344,6 @@
     <div class="mode-tab active" data-mode="test" onclick="switchMode('test')">🎧 Listening Quiz</div>
   </div>
 
-  <!-- Reference Chart -->
   <div class="table-wrapper" id="tableMode">
     <table id="numberTable">
       <thead><tr><th class="corner">Tens</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr></thead>
@@ -346,7 +352,6 @@
     <div class="footnote">✦ Click any cell to hear pronunciation · Click header / row label to jump ✦</div>
   </div>
 
-  <!-- Listening Quiz -->
   <div class="test-wrapper active" id="testMode">
     <div class="test-player">
       <div class="quiz-header">
@@ -385,6 +390,7 @@
 // ============================================================
 //  ⚙️ CONFIGURATION
 // ============================================================
+// 【重要】请将下面的地址替换为你自己的 Cloudinary 音频地址
 const AUDIO_BASE_URL = 'https://res.cloudinary.com/gu8srqqb/video/upload/';
 const AUDIO_EXT = '.mp3';
 
@@ -418,7 +424,7 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK
+//  2. AUDIO PLAYBACK - 只用 Cloudinary，不用备用语音
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
@@ -426,27 +432,46 @@ const audioCache = new Map();
 function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
 
 function playAudio(num, element) {
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  // 停止当前播放的音频
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+
   const url = getAudioUrl(num);
   let audio = audioCache.get(url);
-  if (!audio) { audio = new Audio(url); audioCache.set(url, audio); }
+  if (!audio) {
+    audio = new Audio(url);
+    audioCache.set(url, audio);
+  }
+
   audio.currentTime = 0;
-  audio.play().catch(() => fallbackSpeak(numberData[num].pinyin));
-  currentAudio = audio;
+
+  // 清除之前的视觉高亮
   if (element) {
     document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
     element.classList.add('playing');
-    audio.onended = () => { element.classList.remove('playing'); };
+    audio.onended = () => {
+      element.classList.remove('playing');
+    };
   }
+
+  // 直接播放 Cloudinary 音频，不启用备用语音
+  const playPromise = audio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch((error) => {
+      console.warn('音频播放失败:', error);
+      // 安静失败，不播放备用语音
+      if (element) {
+        element.classList.remove('playing');
+      }
+    });
+  }
+
+  currentAudio = audio;
 }
 
-function fallbackSpeak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-CN'; u.rate = 0.85; u.pitch = 0.8;
-  window.speechSynthesis.speak(u);
-}
+// 完全移除 fallbackSpeak 函数，不再使用语音合成
 
 // ============================================================
 //  3. RENDER TABLE
@@ -463,28 +488,31 @@ for (let row = 0; row < 10; row++) {
     td.dataset.number = item.num;
     const div = document.createElement('div');
     div.className = 'cell-content';
-    
+
     const ch = document.createElement('span');
     ch.className = 'chinese-char';
     ch.textContent = item.chinese;
     div.appendChild(ch);
-    
+
     const py = document.createElement('span');
     py.className = 'pinyin-small';
     py.textContent = item.pinyin;
     div.appendChild(py);
-    
+
     const arabic = document.createElement('span');
     arabic.className = 'arabic-number';
     arabic.textContent = item.num;
     div.appendChild(arabic);
-    
+
     td.appendChild(div);
-    td.addEventListener('click', function() { playAudio(parseInt(this.dataset.number), this); });
+    td.addEventListener('click', function() {
+      playAudio(parseInt(this.dataset.number), this);
+    });
     tr.appendChild(td);
   }
   tbody.appendChild(tr);
 }
+
 document.querySelectorAll('thead th').forEach((th, i) => {
   if (i === 0) return;
   const d = i - 1;
@@ -494,6 +522,7 @@ document.querySelectorAll('thead th').forEach((th, i) => {
     if (target) target.click();
   });
 });
+
 document.querySelectorAll('tbody th').forEach((th) => {
   const ten = parseInt(th.textContent, 10);
   th.style.cursor = 'pointer';
@@ -523,20 +552,24 @@ let isAnswered = false;
 let currentOptions = [];
 
 function nextQuestion() {
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
   isAnswered = false;
+
   document.querySelectorAll('.option-btn').forEach(b => {
     b.disabled = false;
     b.classList.remove('correct-answer', 'wrong-answer');
   });
+
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
-  
   document.getElementById('testChinese').innerHTML = '';
 
   const num = Math.floor(Math.random() * 100);
   currentQuestion = numberData[num];
 
-  let options = new Set();
+  const options = new Set();
   options.add(num);
   while (options.size < 4) {
     const rand = Math.floor(Math.random() * 100);
