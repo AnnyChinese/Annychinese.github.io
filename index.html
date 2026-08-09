@@ -267,16 +267,6 @@
       text-align: center;
     }
 
-    .audio-loading {
-      color: #e67e22;
-      font-size: 14px;
-      margin-top: 8px;
-      display: none;
-    }
-    .audio-loading.show {
-      display: block;
-    }
-
     @media (min-width: 768px) and (max-width: 1024px) {
       body { padding: 16px 12px; }
       .container { max-width: 100%; }
@@ -390,7 +380,7 @@
 // ============================================================
 //  ⚙️ CONFIGURATION
 // ============================================================
-// 【重要】请将下面的地址替换为你自己的 Cloudinary 音频地址
+// ⚠️ 请替换为你的 Cloudinary 音频地址
 const AUDIO_BASE_URL = 'https://res.cloudinary.com/gu8srqqb/video/upload/';
 const AUDIO_EXT = '.mp3';
 
@@ -424,15 +414,17 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK - 只用 Cloudinary，不用备用语音
+//  2. AUDIO PLAYBACK - 完全移除 speechSynthesis
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
 
-function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
+function getAudioUrl(num) {
+  return AUDIO_BASE_URL + num + AUDIO_EXT;
+}
 
 function playAudio(num, element) {
-  // 停止当前播放的音频
+  // 停止当前播放
   if (currentAudio) {
     currentAudio.pause();
     currentAudio.currentTime = 0;
@@ -447,21 +439,23 @@ function playAudio(num, element) {
 
   audio.currentTime = 0;
 
-  // 清除之前的视觉高亮
+  // 高亮效果
   if (element) {
-    document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+    document.querySelectorAll('.playing').forEach(function(el) {
+      el.classList.remove('playing');
+    });
     element.classList.add('playing');
-    audio.onended = () => {
+    audio.onended = function() {
       element.classList.remove('playing');
     };
   }
 
-  // 直接播放 Cloudinary 音频，不启用备用语音
-  const playPromise = audio.play();
+  // 只播放 Cloudinary 音频，完全不使用 speechSynthesis
+  var playPromise = audio.play();
   if (playPromise !== undefined) {
-    playPromise.catch((error) => {
-      console.warn('音频播放失败:', error);
-      // 安静失败，不播放备用语音
+    playPromise.catch(function(error) {
+      // 安静失败，不播放任何备用声音
+      console.warn('音频加载失败:', error);
       if (element) {
         element.classList.remove('playing');
       }
@@ -471,35 +465,34 @@ function playAudio(num, element) {
   currentAudio = audio;
 }
 
-// 完全移除 fallbackSpeak 函数，不再使用语音合成
-
 // ============================================================
 //  3. RENDER TABLE
 // ============================================================
-const tbody = document.getElementById('tableBody');
-for (let row = 0; row < 10; row++) {
-  const tr = document.createElement('tr');
-  const th = document.createElement('th');
+var tbody = document.getElementById('tableBody');
+for (var row = 0; row < 10; row++) {
+  var tr = document.createElement('tr');
+  var th = document.createElement('th');
   th.textContent = row;
   tr.appendChild(th);
-  for (let col = 0; col < 10; col++) {
-    const idx = row * 10 + col, item = numberData[idx];
-    const td = document.createElement('td');
+  for (var col = 0; col < 10; col++) {
+    var idx = row * 10 + col;
+    var item = numberData[idx];
+    var td = document.createElement('td');
     td.dataset.number = item.num;
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.className = 'cell-content';
 
-    const ch = document.createElement('span');
+    var ch = document.createElement('span');
     ch.className = 'chinese-char';
     ch.textContent = item.chinese;
     div.appendChild(ch);
 
-    const py = document.createElement('span');
+    var py = document.createElement('span');
     py.className = 'pinyin-small';
     py.textContent = item.pinyin;
     div.appendChild(py);
 
-    const arabic = document.createElement('span');
+    var arabic = document.createElement('span');
     arabic.className = 'arabic-number';
     arabic.textContent = item.num;
     div.appendChild(arabic);
@@ -513,21 +506,21 @@ for (let row = 0; row < 10; row++) {
   tbody.appendChild(tr);
 }
 
-document.querySelectorAll('thead th').forEach((th, i) => {
+document.querySelectorAll('thead th').forEach(function(th, i) {
   if (i === 0) return;
-  const d = i - 1;
+  var d = i - 1;
   th.style.cursor = 'pointer';
-  th.addEventListener('click', () => {
-    const target = document.querySelector(`td[data-number="${d}"]`);
+  th.addEventListener('click', function() {
+    var target = document.querySelector('td[data-number="' + d + '"]');
     if (target) target.click();
   });
 });
 
-document.querySelectorAll('tbody th').forEach((th) => {
-  const ten = parseInt(th.textContent, 10);
+document.querySelectorAll('tbody th').forEach(function(th) {
+  var ten = parseInt(th.textContent, 10);
   th.style.cursor = 'pointer';
-  th.addEventListener('click', () => {
-    const target = document.querySelector(`td[data-number="${ten*10}"]`);
+  th.addEventListener('click', function() {
+    var target = document.querySelector('td[data-number="' + (ten * 10) + '"]');
     if (target) target.click();
   });
 });
@@ -536,8 +529,10 @@ document.querySelectorAll('tbody th').forEach((th) => {
 //  4. MODE SWITCH
 // ============================================================
 function switchMode(mode) {
-  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.mode-tab[data-mode="${mode}"]`).classList.add('active');
+  document.querySelectorAll('.mode-tab').forEach(function(t) {
+    t.classList.remove('active');
+  });
+  document.querySelector('.mode-tab[data-mode="' + mode + '"]').classList.add('active');
   document.getElementById('tableMode').classList.toggle('active', mode === 'table');
   document.getElementById('testMode').classList.toggle('active', mode === 'test');
 }
@@ -545,11 +540,12 @@ function switchMode(mode) {
 // ============================================================
 //  5. LISTENING QUIZ
 // ============================================================
-let currentQuestion = null;
-let scoreTotal = 0, scoreCorrect = 0;
-let history = [];
-let isAnswered = false;
-let currentOptions = [];
+var currentQuestion = null;
+var scoreTotal = 0;
+var scoreCorrect = 0;
+var history = [];
+var isAnswered = false;
+var currentOptions = [];
 
 function nextQuestion() {
   if (currentAudio) {
@@ -558,7 +554,7 @@ function nextQuestion() {
   }
   isAnswered = false;
 
-  document.querySelectorAll('.option-btn').forEach(b => {
+  document.querySelectorAll('.option-btn').forEach(function(b) {
     b.disabled = false;
     b.classList.remove('correct-answer', 'wrong-answer');
   });
@@ -566,46 +562,52 @@ function nextQuestion() {
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
   document.getElementById('testChinese').innerHTML = '';
 
-  const num = Math.floor(Math.random() * 100);
+  var num = Math.floor(Math.random() * 100);
   currentQuestion = numberData[num];
 
-  const options = new Set();
+  var options = new Set();
   options.add(num);
   while (options.size < 4) {
-    const rand = Math.floor(Math.random() * 100);
+    var rand = Math.floor(Math.random() * 100);
     if (rand !== num) options.add(rand);
   }
   currentOptions = Array.from(options);
-  currentOptions.sort(() => Math.random() - 0.5);
+  currentOptions.sort(function() { return Math.random() - 0.5; });
 
-  const grid = document.getElementById('optionGrid');
+  var grid = document.getElementById('optionGrid');
   grid.innerHTML = '';
-  currentOptions.forEach(n => {
-    const btn = document.createElement('button');
+  currentOptions.forEach(function(n) {
+    var btn = document.createElement('button');
     btn.className = 'option-btn';
     btn.dataset.num = n;
     btn.textContent = numberData[n].chinese;
-    btn.addEventListener('click', () => handleOptionClick(n, btn));
+    btn.addEventListener('click', function() {
+      handleOptionClick(n, btn);
+    });
     grid.appendChild(btn);
   });
 
-  setTimeout(() => playCurrentAudio(), 300);
+  setTimeout(function() {
+    playCurrentAudio();
+  }, 300);
 }
 
 function handleOptionClick(selectedNum, btnElement) {
   if (isAnswered) return;
   isAnswered = true;
-  const isCorrect = selectedNum === currentQuestion.num;
+  var isCorrect = selectedNum === currentQuestion.num;
 
-  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  document.querySelectorAll('.option-btn').forEach(function(b) {
+    b.disabled = true;
+  });
 
-  document.querySelectorAll('.option-btn').forEach(b => {
-    const n = parseInt(b.dataset.num);
+  document.querySelectorAll('.option-btn').forEach(function(b) {
+    var n = parseInt(b.dataset.num);
     if (n === currentQuestion.num) b.classList.add('correct-answer');
     else if (n === selectedNum && !isCorrect) b.classList.add('wrong-answer');
   });
 
-  const result = {
+  var result = {
     num: currentQuestion.num,
     chinese: currentQuestion.chinese,
     selected: selectedNum,
@@ -616,26 +618,28 @@ function handleOptionClick(selectedNum, btnElement) {
   scoreTotal++;
   updateScore();
 
-  document.getElementById('testChinese').innerHTML = `${currentQuestion.chinese}  <span class="pinyin-hint">${currentQuestion.pinyin}</span>`;
+  document.getElementById('testChinese').innerHTML = currentQuestion.chinese + '  <span class="pinyin-hint">' + currentQuestion.pinyin + '</span>';
   document.getElementById('testStatus').innerHTML = isCorrect ?
-    `<span id="statusText">✅ Correct! The number is ${currentQuestion.chinese} (${currentQuestion.pinyin})</span>` :
-    `<span id="statusText">❌ Oops! The correct answer is ${currentQuestion.chinese} (${currentQuestion.pinyin})</span>`;
+    '<span id="statusText">✅ Correct! The number is ' + currentQuestion.chinese + ' (' + currentQuestion.pinyin + ')</span>' :
+    '<span id="statusText">❌ Oops! The correct answer is ' + currentQuestion.chinese + ' (' + currentQuestion.pinyin + ')</span>';
 
-  document.querySelectorAll('.correct-highlight, .wrong-highlight').forEach(el => el.classList.remove('correct-highlight', 'wrong-highlight'));
-  const target = document.querySelector(`td[data-number="${currentQuestion.num}"]`);
+  document.querySelectorAll('.correct-highlight, .wrong-highlight').forEach(function(el) {
+    el.classList.remove('correct-highlight', 'wrong-highlight');
+  });
+  var target = document.querySelector('td[data-number="' + currentQuestion.num + '"]');
   if (target) target.classList.add(isCorrect ? 'correct-highlight' : 'wrong-highlight');
 }
 
 function updateScore() {
-  const percent = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
-  document.getElementById('scoreDisplay').textContent = `Score: ${scoreCorrect} / ${scoreTotal} (${percent}%)`;
+  var percent = scoreTotal > 0 ? Math.round((scoreCorrect / scoreTotal) * 100) : 0;
+  document.getElementById('scoreDisplay').textContent = 'Score: ' + scoreCorrect + ' / ' + scoreTotal + ' (' + percent + '%)';
 
-  const grid = document.getElementById('scoreGrid');
+  var grid = document.getElementById('scoreGrid');
   grid.innerHTML = '';
-  history.slice(-20).forEach((h) => {
-    const div = document.createElement('div');
-    div.className = `score-item ${h.isCorrect ? 'correct' : 'wrong'}`;
-    div.textContent = `${h.num}: ${h.isCorrect ? '✅' : '❌'}`;
+  history.slice(-20).forEach(function(h) {
+    var div = document.createElement('div');
+    div.className = 'score-item ' + (h.isCorrect ? 'correct' : 'wrong');
+    div.textContent = h.num + ': ' + (h.isCorrect ? '✅' : '❌');
     grid.appendChild(div);
   });
 }
