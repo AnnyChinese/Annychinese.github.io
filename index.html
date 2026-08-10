@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Chinese Number Listening Quiz · Pinyin</title>
+  
+  <!-- 预连接到 Cloudinary，加快资源加载 -->
+  <link rel="preconnect" href="https://res.cloudinary.com">
+  <link rel="dns-prefetch" href="https://res.cloudinary.com">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -38,6 +43,27 @@
       color: #1a5770; 
       font-size: clamp(0.85rem, 1.5vw, 1.05rem); 
       margin-top: 0.3rem;
+    }
+    .header .preload-status {
+      font-size: clamp(0.7rem, 1.2vw, 0.85rem);
+      color: #3a7a8a;
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .preload-status .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #b0d8ed;
+      border-top-color: #0a3a4a;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .mode-tabs {
@@ -108,6 +134,7 @@
     td.playing { background: #8bc2dc !important; transform: scale(0.98); }
     td.correct-highlight { background: #7bcfa0 !important; }
     td.wrong-highlight { background: #e8a0a0 !important; }
+    td.loading { opacity: 0.6; transition: opacity 0.1s; }
 
     .cell-content {
       display: flex;
@@ -523,6 +550,10 @@
   <div class="header">
     <h1>🔢 Chinese Number Listening Quiz</h1>
     <p>Press ▶️ to listen · Pick the correct number · Switch to <strong>Reference Chart</strong> to review</p>
+    <div class="preload-status" id="preloadStatus">
+      <span class="spinner" id="preloadSpinner"></span>
+      <span id="preloadText">Loading audio files...</span>
+    </div>
   </div>
 
   <div class="mode-tabs">
@@ -611,26 +642,136 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK
+//  2. AUDIO PLAYBACK - 带预加载功能，完全禁用语音合成
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
+let isPreloading = false;
+let preloadComplete = false;
 
 function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
+
+// 预加载所有音频（后台静默加载）
+function preloadAllAudio() {
+  if (isPreloading || preloadComplete) return;
+  isPreloading = true;
+  
+  console.log('🔄 Starting preload of 100 audio files...');
+  
+  const total = 100;
+  let loaded = 0;
+  const statusText = document.getElementById('preloadText');
+  const spinner = document.getElementById('preloadSpinner');
+  
+  // 分批加载，避免同时请求太多
+  const batchSize = 10;
+  
+  function loadBatch(start) {
+    const end = Math.min(start + batchSize, total);
+    const promises = [];
+    
+    for (let i = start; i < end; i++) {
+      const url = getAudioUrl(i);
+      // 检查是否已经缓存
+      if (audioCache.has(url)) {
+        loaded++;
+        continue;
+      }
+      
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = url;
+      
+      // 存入缓存
+      audioCache.set(url, audio);
+      
+      // 监听加载完成
+      const loadPromise = new Promise((resolve) => {
+        audio.addEventListener('canplaythrough', () => {
+          loaded++;
+          resolve();
+        }, { once: true });
+        // 加载失败也继续
+        audio.addEventListener('error', () => {
+          loaded++;
+          resolve();
+        }, { once: true });
+      });
+      promises.push(loadPromise);
+    }
+    
+    return Promise.all(promises).then(() => {
+      const progress = Math.round((loaded / total) * 100);
+      if (statusText) {
+        statusText.textContent = `Loading audio files... ${progress}%`;
+      }
+      console.log(`📥 Preload progress: ${progress}%`);
+      
+      if (end < total) {
+        // 继续下一批
+        setTimeout(() => loadBatch(end), 150);
+      } else {
+        isPreloading = false;
+        preloadComplete = true;
+        console.log('✅ All audio files preloaded!');
+        // 隐藏整个预加载状态区域
+        const preloadStatus = document.getElementById('preloadStatus');
+        if (preloadStatus) {
+          preloadStatus.style.display = 'none';
+        }
+      }
+    });
+  }
+  
+  loadBatch(0);
+}
 
 function playAudio(num, element) {
   if (currentAudio) { 
     currentAudio.pause(); 
     currentAudio.currentTime = 0; 
   }
+  
   const url = getAudioUrl(num);
   let audio = audioCache.get(url);
-  if (!audio) { 
-    audio = new Audio(url); 
-    audioCache.set(url, audio); 
+  
+  if (!audio) {
+    // 如果还没缓存，创建新的并立即加载
+    audio = new Audio(url);
+    audio.preload = 'auto';
+    audioCache.set(url, audio);
   }
+  
   audio.currentTime = 0;
-  audio.play().catch(() => fallbackSpeak(numberData[num].pinyin));
+  
+  // 显示加载状态
+  if (element) {
+    element.classList.add('loading');
+  }
+  
+  // 直接播放MP3
+  const playPromise = audio.play();
+  
+  if (playPromise !== undefined) {
+    playPromise.then(() => {
+      // 播放成功，移除加载状态
+      if (element) {
+        element.classList.remove('loading');
+      }
+    }).catch(err => {
+      // 播放失败，移除加载状态并显示视觉反馈
+      if (element) {
+        element.classList.remove('loading');
+        const originalBg = element.style.backgroundColor;
+        element.style.backgroundColor = '#ffe0e0';
+        setTimeout(() => {
+          element.style.backgroundColor = originalBg || '';
+        }, 800);
+      }
+      console.warn('Audio playback failed for number:', num, err);
+    });
+  }
+  
   currentAudio = audio;
   if (element) {
     document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
@@ -639,16 +780,6 @@ function playAudio(num, element) {
       element.classList.remove('playing'); 
     };
   }
-}
-
-function fallbackSpeak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-CN'; 
-  u.rate = 0.85; 
-  u.pitch = 0.8;
-  window.speechSynthesis.speak(u);
 }
 
 // ============================================================
@@ -713,15 +844,13 @@ document.querySelectorAll('tbody th').forEach((th) => {
 });
 
 // ============================================================
-//  4. MODE SWITCH - 修复：定义在全局作用域
+//  4. MODE SWITCH
 // ============================================================
 function switchMode(mode) {
-  // 切换标签样式
   document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
   const activeTab = document.querySelector(`.mode-tab[data-mode="${mode}"]`);
   if (activeTab) activeTab.classList.add('active');
   
-  // 切换内容显示
   const tableMode = document.getElementById('tableMode');
   const testMode = document.getElementById('testMode');
   
@@ -761,7 +890,6 @@ function nextQuestion() {
   const num = Math.floor(Math.random() * 100);
   currentQuestion = numberData[num];
 
-  // 生成4个选项
   let options = new Set();
   options.add(num);
   while (options.size < 4) {
@@ -782,7 +910,6 @@ function nextQuestion() {
     grid.appendChild(btn);
   });
 
-  // 自动播放音频
   setTimeout(() => playCurrentAudio(), 300);
 }
 
@@ -813,13 +940,11 @@ function handleOptionClick(selectedNum, btnElement) {
   scoreTotal++;
   updateScore();
 
-  // 显示答案
   document.getElementById('testChinese').innerHTML = `${currentQuestion.chinese}  <span class="pinyin-hint">${currentQuestion.pinyin}</span>`;
   document.getElementById('testStatus').innerHTML = isCorrect ?
     `<span id="statusText">✅ Correct! The number is ${currentQuestion.chinese} (${currentQuestion.pinyin})</span>` :
     `<span id="statusText">❌ Oops! The correct answer is ${currentQuestion.chinese} (${currentQuestion.pinyin})</span>`;
 
-  // 高亮表格中的对应数字
   document.querySelectorAll('.correct-highlight, .wrong-highlight').forEach(el => el.classList.remove('correct-highlight', 'wrong-highlight'));
   const target = document.querySelector(`td[data-number="${currentQuestion.num}"]`);
   if (target) target.classList.add(isCorrect ? 'correct-highlight' : 'wrong-highlight');
@@ -851,19 +976,23 @@ function playCurrentAudio() {
 // ============================================================
 //  6. INIT
 // ============================================================
-// 确保 switchMode 在全局可用
 window.switchMode = switchMode;
 window.nextQuestion = nextQuestion;
 window.playCurrentAudio = playCurrentAudio;
 
-// 初始显示 score 区域
 document.getElementById('scoreDetail').style.display = 'block';
 updateScore();
+
+// 延迟1秒后开始预加载所有音频（不阻塞页面渲染）
+setTimeout(() => {
+  preloadAllAudio();
+}, 800);
 
 // 启动第一个题目
 setTimeout(nextQuestion, 500);
 
 console.log('📢 Audio base URL:', AUDIO_BASE_URL);
+console.log('📢 Preloading will start in 0.8 seconds...');
 </script>
 </body>
 </html>
