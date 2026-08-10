@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Chinese Number Listening Quiz · Pinyin</title>
   
-  <!-- 预连接到 Cloudinary，加快资源加载 -->
+  <!-- 预连接到 Cloudinary -->
   <link rel="preconnect" href="https://res.cloudinary.com">
   <link rel="dns-prefetch" href="https://res.cloudinary.com">
   
@@ -19,6 +19,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      -webkit-tap-highlight-color: transparent;
     }
     .container { 
       max-width: 1200px; 
@@ -130,11 +131,30 @@
     tbody td { background-color: #f7fcff; }
     tbody tr:nth-child(odd) td { background-color: #e5f2fa; }
     td:hover { background: #c5e4f5 !important; }
-    td:active { transform: scale(0.95); }
-    td.playing { background: #8bc2dc !important; transform: scale(0.98); }
-    td.correct-highlight { background: #7bcfa0 !important; }
-    td.wrong-highlight { background: #e8a0a0 !important; }
-    td.loading { opacity: 0.6; transition: opacity 0.1s; }
+    td:active { transform: scale(0.92); background: #8bc2dc !important; }
+    td.playing { 
+      background: #4a9abf !important; 
+      transform: scale(0.95);
+      color: white;
+      box-shadow: 0 0 20px rgba(74,154,191,0.5);
+    }
+    td.playing .chinese-char { color: white; }
+    td.playing .pinyin-small { color: #d4e9f5; }
+    td.correct-highlight { background: #4caf84 !important; transform: scale(0.95); }
+    td.correct-highlight .chinese-char { color: white; }
+    td.correct-highlight .pinyin-small { color: #d4f5e0; }
+    td.wrong-highlight { background: #d97a7a !important; transform: scale(0.95); }
+    td.wrong-highlight .chinese-char { color: white; }
+    td.wrong-highlight .pinyin-small { color: #f5d4d4; }
+    td.loading { 
+      opacity: 0.5; 
+      transition: opacity 0.1s;
+      animation: pulse 0.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
 
     .cell-content {
       display: flex;
@@ -151,6 +171,7 @@
       font-weight: 600;
       color: #0a3a4a;
       line-height: 1.3;
+      transition: color 0.15s;
     }
     .pinyin-small {
       font-size: clamp(0.55rem, 1.2vw, 0.85rem);
@@ -159,6 +180,7 @@
       margin-top: 0.02rem;
       font-family: 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
       line-height: 1.2;
+      transition: color 0.15s;
     }
     .arabic-number {
       position: absolute;
@@ -259,10 +281,10 @@
       justify-content: center;
     }
     .option-btn:hover:not(:disabled) { background: #b0d8ed; transform: scale(1.05); }
-    .option-btn:active:not(:disabled) { transform: scale(0.95); }
+    .option-btn:active:not(:disabled) { transform: scale(0.92); background: #b0d8ed; }
     .option-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .option-btn.correct-answer { background: #7bcfa0; border-color: #2a8a5a; }
-    .option-btn.wrong-answer { background: #e8a0a0; border-color: #b04040; }
+    .option-btn.correct-answer { background: #4caf84; border-color: #2a8a5a; color: white; }
+    .option-btn.wrong-answer { background: #d97a7a; border-color: #b04040; color: white; }
 
     .test-controls {
       display: flex;
@@ -289,8 +311,8 @@
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .btn-primary { background: #b0d8ed; color: #0f3b4f; }
     .btn-primary:hover { background: #9ccce3; }
-    .btn-success { background: #7bcfa0; color: #0a3a2a; }
-    .btn-success:hover { background: #65c08a; }
+    .btn-success { background: #4caf84; color: white; }
+    .btn-success:hover { background: #3d9d74; }
 
     .test-status {
       font-size: clamp(0.95rem, 1.5vw, 1.1rem);
@@ -331,8 +353,8 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .score-item.correct { background: #7bcfa0; color: #0a3a2a; }
-    .score-item.wrong { background: #e8a0a0; color: #6a2020; }
+    .score-item.correct { background: #4caf84; color: white; }
+    .score-item.wrong { background: #d97a7a; color: white; }
 
     .footnote {
       margin-top: 1rem;
@@ -348,7 +370,6 @@
        📱 响应式断点
        ============================================================ */
 
-    /* 平板及以下 */
     @media (max-width: 1024px) {
       body { padding: 0.8rem; }
       .container { padding: 0; }
@@ -361,26 +382,21 @@
       .test-player { padding: 1.2rem 0.8rem; }
     }
 
-    /* 手机横屏 & 小平板 */
     @media (max-width: 768px) {
       body { padding: 0.5rem; }
       .header { padding: 0.8rem 1rem; margin-bottom: 1rem; }
       .header h1 { font-size: clamp(1.2rem, 3.5vw, 1.6rem); }
       .header p { font-size: clamp(0.75rem, 1.5vw, 0.9rem); }
-      
       .mode-tabs { gap: 0.5rem; margin-bottom: 1rem; }
       .mode-tab { padding: 0.5rem 1rem; font-size: clamp(0.8rem, 2vw, 0.95rem); }
-
       .table-wrapper { padding: 0.5rem 0.2rem; border-radius: 1.2rem; }
       table { min-width: 420px; border-radius: 1rem; }
       th, td { min-width: 30px; padding: 0.15rem 0.05rem; border-width: 0.5px; }
       .chinese-char { font-size: clamp(0.75rem, 2vw, 1rem); }
       .pinyin-small { font-size: clamp(0.4rem, 0.9vw, 0.6rem); }
       .arabic-number { font-size: clamp(0.3rem, 0.6vw, 0.45rem); top: 0.5px; right: 1px; }
-
       .test-wrapper { padding: 1rem 0.5rem; border-radius: 1.2rem; }
       .test-player { padding: 1rem 0.5rem; border-radius: 1.2rem; margin-bottom: 1rem; }
-      
       .option-grid { gap: 0.5rem; margin: 1rem auto; }
       .option-btn { 
         font-size: clamp(1rem, 2.5vw, 1.3rem); 
@@ -388,7 +404,6 @@
         min-height: clamp(44px, 7vw, 52px);
         border-radius: 1rem;
       }
-      
       .test-player .big-number { 
         font-size: clamp(1.6rem, 5vw, 2.2rem); 
         min-height: clamp(40px, 8vw, 50px);
@@ -397,16 +412,9 @@
       .test-player .big-number .pinyin-hint { 
         font-size: clamp(0.75rem, 1.8vw, 0.95rem); 
       }
-      
-      .quiz-header { gap: 0.5rem; }
       .play-btn-plain { font-size: clamp(1.8rem, 4vw, 2.4rem); padding: 0.3rem; }
-      
-      .btn { 
-        padding: 0.5rem 1.2rem; 
-        font-size: clamp(0.8rem, 1.8vw, 0.95rem); 
-      }
+      .btn { padding: 0.5rem 1.2rem; font-size: clamp(0.8rem, 1.8vw, 0.95rem); }
       .test-controls { gap: 0.5rem; margin-top: 0.8rem; }
-      
       .score-display { font-size: clamp(1.2rem, 2.5vw, 1.5rem); }
       .score-grid { 
         grid-template-columns: repeat(auto-fill, minmax(clamp(50px, 8vw, 65px), 1fr));
@@ -418,36 +426,20 @@
       .footnote { font-size: clamp(0.65rem, 1vw, 0.8rem); }
     }
 
-    /* 手机竖屏 */
     @media (max-width: 480px) {
       body { padding: 0.3rem; }
       .header { padding: 0.6rem 0.8rem; border-radius: 1.2rem; margin-bottom: 0.8rem; }
       .header h1 { font-size: clamp(1rem, 4vw, 1.3rem); }
       .header p { font-size: clamp(0.65rem, 1.8vw, 0.8rem); }
-
-      .mode-tab { 
-        padding: 0.4rem 0.8rem; 
-        font-size: clamp(0.7rem, 2.2vw, 0.85rem); 
-        border-width: 1.5px;
-      }
-
+      .mode-tab { padding: 0.4rem 0.8rem; font-size: clamp(0.7rem, 2.2vw, 0.85rem); border-width: 1.5px; }
       .table-wrapper { padding: 0.3rem 0.1rem; border-radius: 1rem; }
       table { min-width: 320px; border-radius: 0.8rem; }
       th, td { min-width: 24px; padding: 0.1rem 0.05rem; border-width: 0.5px; }
       .chinese-char { font-size: clamp(0.6rem, 2.5vw, 0.85rem); }
-      .pinyin-small { 
-        font-size: clamp(0.3rem, 0.9vw, 0.5rem); 
-        margin-top: 0;
-      }
-      .arabic-number { 
-        font-size: clamp(0.25rem, 0.6vw, 0.4rem); 
-        top: 0.5px; 
-        right: 0.5px; 
-      }
-
+      .pinyin-small { font-size: clamp(0.3rem, 0.9vw, 0.5rem); margin-top: 0; }
+      .arabic-number { font-size: clamp(0.25rem, 0.6vw, 0.4rem); top: 0.5px; right: 0.5px; }
       .test-wrapper { padding: 0.8rem 0.3rem; border-radius: 1rem; }
       .test-player { padding: 0.8rem 0.3rem; border-radius: 1rem; margin-bottom: 0.8rem; }
-
       .option-grid { 
         grid-template-columns: repeat(2, 1fr);
         gap: 0.4rem;
@@ -462,7 +454,6 @@
         border-radius: 0.8rem;
         border-width: 1.5px;
       }
-
       .test-player .big-number { 
         font-size: clamp(1.4rem, 6vw, 1.8rem); 
         min-height: clamp(36px, 10vw, 44px);
@@ -471,59 +462,31 @@
       .test-player .big-number .pinyin-hint { 
         font-size: clamp(0.65rem, 2vw, 0.8rem); 
       }
-
       .play-btn-plain { font-size: clamp(1.6rem, 5vw, 2rem); padding: 0.2rem; }
-
-      .btn { 
-        padding: 0.4rem 0.8rem; 
-        font-size: clamp(0.7rem, 2vw, 0.85rem); 
-        border-radius: 2rem;
-      }
+      .btn { padding: 0.4rem 0.8rem; font-size: clamp(0.7rem, 2vw, 0.85rem); border-radius: 2rem; }
       .test-controls { gap: 0.4rem; margin-top: 0.6rem; }
-
       .score-display { font-size: clamp(1rem, 3vw, 1.3rem); }
       .score-grid { 
         grid-template-columns: repeat(auto-fill, minmax(clamp(40px, 10vw, 55px), 1fr));
         gap: 0.2rem;
         max-height: 120px;
       }
-      .score-item { 
-        font-size: clamp(0.55rem, 1.5vw, 0.7rem); 
-        padding: 0.15rem 0.1rem;
-        border-radius: 0.4rem;
-      }
-      .test-status { 
-        font-size: clamp(0.7rem, 1.8vw, 0.85rem); 
-        min-height: 1.8rem;
-        margin-top: 0.8rem;
-      }
+      .score-item { font-size: clamp(0.55rem, 1.5vw, 0.7rem); padding: 0.15rem 0.1rem; border-radius: 0.4rem; }
+      .test-status { font-size: clamp(0.7rem, 1.8vw, 0.85rem); min-height: 1.8rem; margin-top: 0.8rem; }
       .score-detail { padding: 0.6rem; margin-top: 0.8rem; border-radius: 1rem; }
-      .footnote { 
-        font-size: clamp(0.55rem, 1.5vw, 0.7rem); 
-        padding-top: 0.6rem;
-        margin-top: 0.6rem;
-      }
+      .footnote { font-size: clamp(0.55rem, 1.5vw, 0.7rem); padding-top: 0.6rem; margin-top: 0.6rem; }
     }
 
-    /* 超小屏手机 */
     @media (max-width: 360px) {
       table { min-width: 280px; }
       th, td { min-width: 20px; }
       .chinese-char { font-size: clamp(0.5rem, 2vw, 0.7rem); }
       .pinyin-small { font-size: clamp(0.25rem, 0.8vw, 0.4rem); }
       .arabic-number { display: none; }
-      .option-btn { 
-        font-size: clamp(0.8rem, 3vw, 1rem); 
-        min-height: 38px;
-        padding: 0.3rem 0.1rem;
-      }
-      .test-player .big-number { 
-        font-size: clamp(1.2rem, 5vw, 1.5rem); 
-        min-height: 32px;
-      }
+      .option-btn { font-size: clamp(0.8rem, 3vw, 1rem); min-height: 38px; padding: 0.3rem 0.1rem; }
+      .test-player .big-number { font-size: clamp(1.2rem, 5vw, 1.5rem); min-height: 32px; }
     }
 
-    /* 大屏桌面优化 */
     @media (min-width: 1400px) {
       .container { max-width: 1400px; }
       th, td { min-width: 64px; padding: 0.6rem 0.2rem; }
@@ -532,7 +495,6 @@
       .arabic-number { font-size: 0.7rem; }
     }
 
-    /* 触摸设备优化 - 增大点击区域 */
     @media (hover: none) and (pointer: coarse) {
       .mode-tab, .btn, .option-btn, .play-btn-plain, th, td {
         min-height: 44px;
@@ -540,7 +502,7 @@
       }
       td:hover { background: inherit !important; }
       .option-btn:hover:not(:disabled) { background: white; }
-      .option-btn:active:not(:disabled) { background: #b0d8ed; transform: scale(0.95); }
+      .option-btn:active:not(:disabled) { background: #b0d8ed; transform: scale(0.92); }
     }
   </style>
 </head>
@@ -561,7 +523,6 @@
     <div class="mode-tab active" data-mode="test" onclick="switchMode('test')">🎧 Listening Quiz</div>
   </div>
 
-  <!-- Reference Chart -->
   <div class="table-wrapper" id="tableMode">
     <table id="numberTable">
       <thead><tr><th class="corner">Tens</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th></tr></thead>
@@ -570,17 +531,14 @@
     <div class="footnote">✦ Click any cell to hear pronunciation · Click header / row label to jump ✦</div>
   </div>
 
-  <!-- Listening Quiz -->
   <div class="test-wrapper active" id="testMode">
     <div class="test-player">
       <div class="quiz-header" style="justify-content: center;">
         <button class="play-btn-plain" id="playQuizAudioBtn" onclick="playCurrentAudio()" title="Play audio">▶️</button>
       </div>
-
       <div class="big-number" id="questionDisplay">
         <span id="testChinese"></span>
       </div>
-
       <div class="option-grid" id="optionGrid">
         <button class="option-btn" data-num="0">零</button>
         <button class="option-btn" data-num="1">一</button>
@@ -588,16 +546,13 @@
         <button class="option-btn" data-num="3">三</button>
       </div>
     </div>
-
     <div class="test-controls">
       <button class="btn btn-primary" id="playAudioBtn" onclick="playCurrentAudio()">🔊 Listen Again</button>
       <button class="btn btn-success" id="nextBtn" onclick="nextQuestion()">🎲 Next Question</button>
     </div>
-
     <div class="test-status" id="testStatus">
       <span id="statusText">Click "Next Question" to start the quiz</span>
     </div>
-
     <div class="score-detail" id="scoreDetail">
       <div class="score-display" id="scoreDisplay">Score: 0 / 0 (0%)</div>
       <div class="score-grid" id="scoreGrid"></div>
@@ -611,6 +566,8 @@
 // ============================================================
 const AUDIO_BASE_URL = 'https://res.cloudinary.com/gu8srqqb/video/upload/';
 const AUDIO_EXT = '.mp3';
+const PRELOAD_KEY = 'audio_preload_complete';
+const TOTAL_AUDIO = 100;
 
 // ============================================================
 //  1. DATA
@@ -620,7 +577,7 @@ const pinyinDigits = ['líng', 'yī', 'èr', 'sān', 'sì', 'wǔ', 'liù', 'qī'
 
 function buildNumberData() {
   const data = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < TOTAL_AUDIO; i++) {
     let chinese, pinyin;
     if (i === 0) { chinese = '零'; pinyin = 'líng'; }
     else if (i < 10) { chinese = chineseDigits[i]; pinyin = pinyinDigits[i]; }
@@ -642,83 +599,108 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK - 带预加载功能，完全禁用语音合成
+//  2. AUDIO PLAYBACK - 智能缓存 + 持久化状态
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
 let isPreloading = false;
-let preloadComplete = false;
 
 function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
 
-// 预加载所有音频（后台静默加载）
+// 检查是否已经预加载过（使用 localStorage）
+function hasPreloadedBefore() {
+  try {
+    return localStorage.getItem(PRELOAD_KEY) === 'true';
+  } catch { return false; }
+}
+
+function markPreloadedComplete() {
+  try {
+    localStorage.setItem(PRELOAD_KEY, 'true');
+  } catch {}
+}
+
+// 预加载所有音频
 function preloadAllAudio() {
-  if (isPreloading || preloadComplete) return;
-  isPreloading = true;
+  if (isPreloading) return;
   
+  // 如果已经预加载过，直接隐藏状态并返回
+  if (hasPreloadedBefore()) {
+    console.log('✅ Audio already preloaded (cached)');
+    const preloadStatus = document.getElementById('preloadStatus');
+    if (preloadStatus) preloadStatus.style.display = 'none';
+    return;
+  }
+  
+  isPreloading = true;
   console.log('🔄 Starting preload of 100 audio files...');
   
-  const total = 100;
   let loaded = 0;
+  let errored = 0;
   const statusText = document.getElementById('preloadText');
   const spinner = document.getElementById('preloadSpinner');
   
-  // 分批加载，避免同时请求太多
-  const batchSize = 10;
+  // 分批加载
+  const batchSize = 5; // 减小批次，避免移动端内存问题
   
   function loadBatch(start) {
-    const end = Math.min(start + batchSize, total);
+    const end = Math.min(start + batchSize, TOTAL_AUDIO);
     const promises = [];
     
     for (let i = start; i < end; i++) {
       const url = getAudioUrl(i);
-      // 检查是否已经缓存
+      // 如果已缓存，跳过
       if (audioCache.has(url)) {
         loaded++;
         continue;
       }
       
       const audio = new Audio();
-      audio.preload = 'auto';
+      audio.preload = 'metadata'; // 改为 metadata，减少带宽占用
       audio.src = url;
-      
-      // 存入缓存
       audioCache.set(url, audio);
       
-      // 监听加载完成
       const loadPromise = new Promise((resolve) => {
-        audio.addEventListener('canplaythrough', () => {
+        // 监听可播放事件
+        audio.addEventListener('loadedmetadata', () => {
           loaded++;
           resolve();
         }, { once: true });
         // 加载失败也继续
         audio.addEventListener('error', () => {
+          errored++;
           loaded++;
           resolve();
         }, { once: true });
+        // 超时保护（5秒）
+        setTimeout(() => {
+          if (!audio.readyState) {
+            loaded++;
+            resolve();
+          }
+        }, 5000);
       });
       promises.push(loadPromise);
     }
     
     return Promise.all(promises).then(() => {
-      const progress = Math.round((loaded / total) * 100);
+      const progress = Math.min(Math.round((loaded / TOTAL_AUDIO) * 100), 100);
       if (statusText) {
         statusText.textContent = `Loading audio files... ${progress}%`;
       }
-      console.log(`📥 Preload progress: ${progress}%`);
+      console.log(`📥 Preload: ${loaded}/${TOTAL_AUDIO} (${progress}%)`);
       
-      if (end < total) {
-        // 继续下一批
-        setTimeout(() => loadBatch(end), 150);
+      if (end < TOTAL_AUDIO) {
+        // 继续下一批，间隔稍长避免网络拥堵
+        setTimeout(() => loadBatch(end), 300);
       } else {
         isPreloading = false;
-        preloadComplete = true;
-        console.log('✅ All audio files preloaded!');
-        // 隐藏整个预加载状态区域
+        // 标记已完成
+        markPreloadedComplete();
+        console.log(`✅ All audio preloaded! (${errored} errors)`);
+        // 隐藏状态
         const preloadStatus = document.getElementById('preloadStatus');
-        if (preloadStatus) {
-          preloadStatus.style.display = 'none';
-        }
+        if (preloadStatus) preloadStatus.style.display = 'none';
       }
     });
   }
@@ -736,37 +718,42 @@ function playAudio(num, element) {
   let audio = audioCache.get(url);
   
   if (!audio) {
-    // 如果还没缓存，创建新的并立即加载
+    // 如果还没缓存，创建新的
     audio = new Audio(url);
-    audio.preload = 'auto';
+    audio.preload = 'metadata';
     audioCache.set(url, audio);
+  }
+  
+  // 确保音频已加载
+  if (!audio.readyState) {
+    // 如果音频还没准备好，触发加载
+    audio.load();
   }
   
   audio.currentTime = 0;
   
-  // 显示加载状态
+  // 显示加载状态（仅在元素存在时）
   if (element) {
     element.classList.add('loading');
   }
   
-  // 直接播放MP3
+  // 播放
   const playPromise = audio.play();
   
   if (playPromise !== undefined) {
     playPromise.then(() => {
-      // 播放成功，移除加载状态
       if (element) {
         element.classList.remove('loading');
       }
     }).catch(err => {
-      // 播放失败，移除加载状态并显示视觉反馈
       if (element) {
         element.classList.remove('loading');
+        // 视觉错误反馈
         const originalBg = element.style.backgroundColor;
-        element.style.backgroundColor = '#ffe0e0';
+        element.style.backgroundColor = '#d97a7a';
         setTimeout(() => {
           element.style.backgroundColor = originalBg || '';
-        }, 800);
+        }, 600);
       }
       console.warn('Audio playback failed for number:', num, err);
     });
@@ -815,6 +802,9 @@ for (let row = 0; row < 10; row++) {
     
     td.appendChild(div);
     td.addEventListener('click', function(e) { 
+      // 触觉反馈
+      this.style.transform = 'scale(0.92)';
+      setTimeout(() => { this.style.transform = ''; }, 150);
       playAudio(parseInt(this.dataset.number, 10), this); 
     });
     tr.appendChild(td);
@@ -822,7 +812,6 @@ for (let row = 0; row < 10; row++) {
   tbody.appendChild(tr);
 }
 
-// 表头点击事件
 document.querySelectorAll('thead th').forEach((th, i) => {
   if (i === 0) return;
   const d = i - 1;
@@ -833,7 +822,6 @@ document.querySelectorAll('thead th').forEach((th, i) => {
   });
 });
 
-// 行标签点击事件
 document.querySelectorAll('tbody th').forEach((th) => {
   const ten = parseInt(th.textContent, 10);
   th.style.cursor = 'pointer';
@@ -887,13 +875,13 @@ function nextQuestion() {
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
   document.getElementById('testChinese').innerHTML = '';
 
-  const num = Math.floor(Math.random() * 100);
+  const num = Math.floor(Math.random() * TOTAL_AUDIO);
   currentQuestion = numberData[num];
 
   let options = new Set();
   options.add(num);
   while (options.size < 4) {
-    const rand = Math.floor(Math.random() * 100);
+    const rand = Math.floor(Math.random() * TOTAL_AUDIO);
     if (rand !== num) options.add(rand);
   }
   currentOptions = Array.from(options);
@@ -910,7 +898,7 @@ function nextQuestion() {
     grid.appendChild(btn);
   });
 
-  setTimeout(() => playCurrentAudio(), 300);
+  setTimeout(() => playCurrentAudio(), 400);
 }
 
 function handleOptionClick(selectedNum, btnElement) {
@@ -983,16 +971,22 @@ window.playCurrentAudio = playCurrentAudio;
 document.getElementById('scoreDetail').style.display = 'block';
 updateScore();
 
-// 延迟1秒后开始预加载所有音频（不阻塞页面渲染）
-setTimeout(() => {
-  preloadAllAudio();
-}, 800);
+// 先检查是否已预加载，再决定是否显示加载状态
+if (hasPreloadedBefore()) {
+  const preloadStatus = document.getElementById('preloadStatus');
+  if (preloadStatus) preloadStatus.style.display = 'none';
+  console.log('📢 Using cached audio');
+} else {
+  // 延迟预加载
+  setTimeout(() => {
+    preloadAllAudio();
+  }, 500);
+}
 
 // 启动第一个题目
-setTimeout(nextQuestion, 500);
+setTimeout(nextQuestion, 600);
 
 console.log('📢 Audio base URL:', AUDIO_BASE_URL);
-console.log('📢 Preloading will start in 0.8 seconds...');
 </script>
 </body>
 </html>
