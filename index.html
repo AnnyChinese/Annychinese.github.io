@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Chinese Number Listening Quiz · Pinyin</title>
   
-  <!-- 预连接到 Cloudinary -->
   <link rel="preconnect" href="https://res.cloudinary.com">
   <link rel="dns-prefetch" href="https://res.cloudinary.com">
   
@@ -115,39 +114,30 @@
       td:hover { background: #c5e4f5 !important; }
     }
     
-    /* 点击/激活效果 - 所有设备统一 */
-    td:active {
-      background: #4a9abf !important;
-      color: white !important;
-      transform: none !important;
-    }
-    td:active .chinese-char { color: white !important; }
-    td:active .pinyin-small { color: #d4e9f5 !important; }
-    
-    /* 播放状态 - 深蓝色背景 + 白色文字 */
+    /* 基础样式 - 所有状态都通过 JS 控制 class */
     td.playing { 
       background: #4a9abf !important; 
       color: white !important;
-      transform: none !important;
     }
     td.playing .chinese-char { color: white !important; }
     td.playing .pinyin-small { color: #d4e9f5 !important; }
+    td.playing .arabic-number { color: #d4e9f5 !important; }
     
     td.correct-highlight { 
       background: #4caf84 !important; 
       color: white !important;
-      transform: none !important;
     }
     td.correct-highlight .chinese-char { color: white !important; }
     td.correct-highlight .pinyin-small { color: #d4f5e0 !important; }
+    td.correct-highlight .arabic-number { color: #d4f5e0 !important; }
     
     td.wrong-highlight { 
       background: #d97a7a !important; 
       color: white !important;
-      transform: none !important;
     }
     td.wrong-highlight .chinese-char { color: white !important; }
     td.wrong-highlight .pinyin-small { color: #f5d4d4 !important; }
+    td.wrong-highlight .arabic-number { color: #f5d4d4 !important; }
 
     .cell-content {
       display: flex;
@@ -187,9 +177,6 @@
       line-height: 1;
       transition: color 0.15s;
     }
-    td.playing .arabic-number { color: #d4e9f5 !important; }
-    td.correct-highlight .arabic-number { color: #d4f5e0 !important; }
-    td.wrong-highlight .arabic-number { color: #f5d4d4 !important; }
 
     .test-wrapper {
       background: rgba(200,232,248,0.45);
@@ -493,7 +480,7 @@
       .arabic-number { font-size: 0.7rem; }
     }
 
-    /* 触摸设备优化 - 禁用 hover，保留点击效果 */
+    /* 触摸设备优化 */
     @media (hover: none) and (pointer: coarse) {
       .mode-tab, .btn, .option-btn, .play-btn-plain, th, td {
         min-height: 44px;
@@ -593,7 +580,7 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK - 后台预加载，页面无显示
+//  2. AUDIO PLAYBACK - 后台预加载
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
@@ -609,7 +596,7 @@ function markPreloadedComplete() {
   try { localStorage.setItem(PRELOAD_KEY, 'true'); } catch {}
 }
 
-// 后台预加载 - 完全不显示在页面上
+// 后台预加载
 function preloadAllAudio() {
   if (isPreloading || hasPreloadedBefore()) return;
   isPreloading = true;
@@ -654,7 +641,9 @@ function preloadAllAudio() {
   loadBatch(0);
 }
 
+// 核心播放函数 - 同时处理样式
 function playAudio(num, element) {
+  // 停止当前播放
   if (currentAudio) { 
     currentAudio.pause(); 
     currentAudio.currentTime = 0; 
@@ -675,14 +664,15 @@ function playAudio(num, element) {
   
   audio.currentTime = 0;
   
-  // 移除所有其他元素的 playing 状态
+  // ===== 样式控制：先清除所有 playing 状态 =====
   document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
   
-  // 立即给当前元素添加 playing 状态（深蓝色背景 + 白色文字）
+  // ===== 立即给当前元素添加 playing 状态（深蓝色背景 + 白色文字） =====
   if (element) {
     element.classList.add('playing');
   }
   
+  // 播放音频
   const playPromise = audio.play();
   
   if (playPromise !== undefined) {
@@ -735,9 +725,19 @@ for (let row = 0; row < 10; row++) {
     div.appendChild(arabic);
     
     td.appendChild(div);
+    
+    // 点击事件 - 使用 touchstart 和 click 双重保障移动端响应
     td.addEventListener('click', function(e) { 
       playAudio(parseInt(this.dataset.number, 10), this); 
     });
+    // 移动端触摸时立即添加视觉反馈
+    td.addEventListener('touchstart', function(e) {
+      // 不阻止默认行为，让 click 也能触发
+      // 预先添加 playing 样式以获得即时反馈
+      document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+      this.classList.add('playing');
+    }, { passive: true });
+    
     tr.appendChild(td);
   }
   tbody.appendChild(tr);
@@ -889,6 +889,7 @@ function playCurrentAudio() {
     return;
   }
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
+  // 测验模式下不需要高亮表格单元格，传 null
   playAudio(currentQuestion.num, null);
 }
 
@@ -902,16 +903,14 @@ window.playCurrentAudio = playCurrentAudio;
 document.getElementById('scoreDetail').style.display = 'block';
 updateScore();
 
-// 后台预加载 - 完全不显示在页面上
+// 后台预加载
 if (!hasPreloadedBefore()) {
   setTimeout(preloadAllAudio, 1000);
 } else {
-  console.log('📢 Using cached audio (preloaded before)');
+  console.log('📢 Using cached audio');
 }
 
-// 启动第一个题目
 setTimeout(nextQuestion, 600);
-
 console.log('📢 Audio base URL:', AUDIO_BASE_URL);
 </script>
 </body>
