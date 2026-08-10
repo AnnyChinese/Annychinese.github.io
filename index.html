@@ -45,27 +45,6 @@
       font-size: clamp(0.85rem, 1.5vw, 1.05rem); 
       margin-top: 0.3rem;
     }
-    .header .preload-status {
-      font-size: clamp(0.7rem, 1.2vw, 0.85rem);
-      color: #3a7a8a;
-      margin-top: 0.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    .preload-status .spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid #b0d8ed;
-      border-top-color: #0a3a4a;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
 
     .mode-tabs {
       display: flex;
@@ -119,7 +98,7 @@
       padding: 0.3rem 0.1rem;
       border: 1px solid #b5d8ea;
       min-width: 44px;
-      transition: all 0.15s;
+      transition: background-color 0.15s, color 0.15s;
       cursor: pointer;
       position: relative;
       touch-action: manipulation;
@@ -130,31 +109,45 @@
     .corner { background: #b0d8ed; border-right: 2px solid #8bc2dc; border-bottom: 2px solid #8bc2dc; }
     tbody td { background-color: #f7fcff; }
     tbody tr:nth-child(odd) td { background-color: #e5f2fa; }
-    td:hover { background: #c5e4f5 !important; }
-    td:active { transform: scale(0.92); background: #8bc2dc !important; }
+    
+    /* 悬停效果 - 只在非触摸设备生效 */
+    @media (hover: hover) {
+      td:hover { background: #c5e4f5 !important; }
+    }
+    
+    /* 点击/激活效果 - 所有设备统一 */
+    td:active {
+      background: #4a9abf !important;
+      color: white !important;
+      transform: none !important;
+    }
+    td:active .chinese-char { color: white !important; }
+    td:active .pinyin-small { color: #d4e9f5 !important; }
+    
+    /* 播放状态 - 深蓝色背景 + 白色文字 */
     td.playing { 
       background: #4a9abf !important; 
-      transform: scale(0.95);
-      color: white;
-      box-shadow: 0 0 20px rgba(74,154,191,0.5);
+      color: white !important;
+      transform: none !important;
     }
-    td.playing .chinese-char { color: white; }
-    td.playing .pinyin-small { color: #d4e9f5; }
-    td.correct-highlight { background: #4caf84 !important; transform: scale(0.95); }
-    td.correct-highlight .chinese-char { color: white; }
-    td.correct-highlight .pinyin-small { color: #d4f5e0; }
-    td.wrong-highlight { background: #d97a7a !important; transform: scale(0.95); }
-    td.wrong-highlight .chinese-char { color: white; }
-    td.wrong-highlight .pinyin-small { color: #f5d4d4; }
-    td.loading { 
-      opacity: 0.5; 
-      transition: opacity 0.1s;
-      animation: pulse 0.8s ease-in-out infinite;
+    td.playing .chinese-char { color: white !important; }
+    td.playing .pinyin-small { color: #d4e9f5 !important; }
+    
+    td.correct-highlight { 
+      background: #4caf84 !important; 
+      color: white !important;
+      transform: none !important;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+    td.correct-highlight .chinese-char { color: white !important; }
+    td.correct-highlight .pinyin-small { color: #d4f5e0 !important; }
+    
+    td.wrong-highlight { 
+      background: #d97a7a !important; 
+      color: white !important;
+      transform: none !important;
     }
+    td.wrong-highlight .chinese-char { color: white !important; }
+    td.wrong-highlight .pinyin-small { color: #f5d4d4 !important; }
 
     .cell-content {
       display: flex;
@@ -164,6 +157,7 @@
       line-height: 1.2;
       padding: 0.1rem 0;
       position: relative;
+      pointer-events: none;
     }
     .chinese-char {
       font-family: 'KaiTi', 'STKaiti', '华文楷体', '楷体', 'Noto Serif SC', serif;
@@ -191,7 +185,11 @@
       font-weight: 400;
       opacity: 0.7;
       line-height: 1;
+      transition: color 0.15s;
     }
+    td.playing .arabic-number { color: #d4e9f5 !important; }
+    td.correct-highlight .arabic-number { color: #d4f5e0 !important; }
+    td.wrong-highlight .arabic-number { color: #f5d4d4 !important; }
 
     .test-wrapper {
       background: rgba(200,232,248,0.45);
@@ -495,6 +493,7 @@
       .arabic-number { font-size: 0.7rem; }
     }
 
+    /* 触摸设备优化 - 禁用 hover，保留点击效果 */
     @media (hover: none) and (pointer: coarse) {
       .mode-tab, .btn, .option-btn, .play-btn-plain, th, td {
         min-height: 44px;
@@ -502,7 +501,6 @@
       }
       td:hover { background: inherit !important; }
       .option-btn:hover:not(:disabled) { background: white; }
-      .option-btn:active:not(:disabled) { background: #b0d8ed; transform: scale(0.92); }
     }
   </style>
 </head>
@@ -512,10 +510,6 @@
   <div class="header">
     <h1>🔢 Chinese Number Listening Quiz</h1>
     <p>Press ▶️ to listen · Pick the correct number · Switch to <strong>Reference Chart</strong> to review</p>
-    <div class="preload-status" id="preloadStatus">
-      <span class="spinner" id="preloadSpinner"></span>
-      <span id="preloadText">Loading audio files...</span>
-    </div>
   </div>
 
   <div class="mode-tabs">
@@ -566,7 +560,7 @@
 // ============================================================
 const AUDIO_BASE_URL = 'https://res.cloudinary.com/gu8srqqb/video/upload/';
 const AUDIO_EXT = '.mp3';
-const PRELOAD_KEY = 'audio_preload_complete';
+const PRELOAD_KEY = 'audio_preload_complete_v2';
 const TOTAL_AUDIO = 100;
 
 // ============================================================
@@ -599,7 +593,7 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK - 智能缓存 + 持久化状态
+//  2. AUDIO PLAYBACK - 后台预加载，页面无显示
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
@@ -607,41 +601,23 @@ let isPreloading = false;
 
 function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
 
-// 检查是否已经预加载过（使用 localStorage）
 function hasPreloadedBefore() {
-  try {
-    return localStorage.getItem(PRELOAD_KEY) === 'true';
-  } catch { return false; }
+  try { return localStorage.getItem(PRELOAD_KEY) === 'true'; } catch { return false; }
 }
 
 function markPreloadedComplete() {
-  try {
-    localStorage.setItem(PRELOAD_KEY, 'true');
-  } catch {}
+  try { localStorage.setItem(PRELOAD_KEY, 'true'); } catch {}
 }
 
-// 预加载所有音频
+// 后台预加载 - 完全不显示在页面上
 function preloadAllAudio() {
-  if (isPreloading) return;
-  
-  // 如果已经预加载过，直接隐藏状态并返回
-  if (hasPreloadedBefore()) {
-    console.log('✅ Audio already preloaded (cached)');
-    const preloadStatus = document.getElementById('preloadStatus');
-    if (preloadStatus) preloadStatus.style.display = 'none';
-    return;
-  }
-  
+  if (isPreloading || hasPreloadedBefore()) return;
   isPreloading = true;
-  console.log('🔄 Starting preload of 100 audio files...');
+  
+  console.log('🔄 Background preload started...');
   
   let loaded = 0;
-  let errored = 0;
-  const statusText = document.getElementById('preloadText');
-  const spinner = document.getElementById('preloadSpinner');
-  
-  // 分批加载
-  const batchSize = 5; // 减小批次，避免移动端内存问题
+  const batchSize = 5;
   
   function loadBatch(start) {
     const end = Math.min(start + batchSize, TOTAL_AUDIO);
@@ -649,58 +625,28 @@ function preloadAllAudio() {
     
     for (let i = start; i < end; i++) {
       const url = getAudioUrl(i);
-      // 如果已缓存，跳过
-      if (audioCache.has(url)) {
-        loaded++;
-        continue;
-      }
+      if (audioCache.has(url)) { loaded++; continue; }
       
       const audio = new Audio();
-      audio.preload = 'metadata'; // 改为 metadata，减少带宽占用
+      audio.preload = 'metadata';
       audio.src = url;
       audioCache.set(url, audio);
       
-      const loadPromise = new Promise((resolve) => {
-        // 监听可播放事件
-        audio.addEventListener('loadedmetadata', () => {
-          loaded++;
-          resolve();
-        }, { once: true });
-        // 加载失败也继续
-        audio.addEventListener('error', () => {
-          errored++;
-          loaded++;
-          resolve();
-        }, { once: true });
-        // 超时保护（5秒）
-        setTimeout(() => {
-          if (!audio.readyState) {
-            loaded++;
-            resolve();
-          }
-        }, 5000);
+      const promise = new Promise((resolve) => {
+        audio.addEventListener('loadedmetadata', () => { loaded++; resolve(); }, { once: true });
+        audio.addEventListener('error', () => { loaded++; resolve(); }, { once: true });
+        setTimeout(() => { if (!audio.readyState) { loaded++; resolve(); } }, 5000);
       });
-      promises.push(loadPromise);
+      promises.push(promise);
     }
     
     return Promise.all(promises).then(() => {
-      const progress = Math.min(Math.round((loaded / TOTAL_AUDIO) * 100), 100);
-      if (statusText) {
-        statusText.textContent = `Loading audio files... ${progress}%`;
-      }
-      console.log(`📥 Preload: ${loaded}/${TOTAL_AUDIO} (${progress}%)`);
-      
       if (end < TOTAL_AUDIO) {
-        // 继续下一批，间隔稍长避免网络拥堵
         setTimeout(() => loadBatch(end), 300);
       } else {
         isPreloading = false;
-        // 标记已完成
         markPreloadedComplete();
-        console.log(`✅ All audio preloaded! (${errored} errors)`);
-        // 隐藏状态
-        const preloadStatus = document.getElementById('preloadStatus');
-        if (preloadStatus) preloadStatus.style.display = 'none';
+        console.log('✅ Background preload complete');
       }
     });
   }
@@ -718,51 +664,39 @@ function playAudio(num, element) {
   let audio = audioCache.get(url);
   
   if (!audio) {
-    // 如果还没缓存，创建新的
     audio = new Audio(url);
     audio.preload = 'metadata';
     audioCache.set(url, audio);
   }
   
-  // 确保音频已加载
   if (!audio.readyState) {
-    // 如果音频还没准备好，触发加载
     audio.load();
   }
   
   audio.currentTime = 0;
   
-  // 显示加载状态（仅在元素存在时）
+  // 移除所有其他元素的 playing 状态
+  document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+  
+  // 立即给当前元素添加 playing 状态（深蓝色背景 + 白色文字）
   if (element) {
-    element.classList.add('loading');
+    element.classList.add('playing');
   }
   
-  // 播放
   const playPromise = audio.play();
   
   if (playPromise !== undefined) {
-    playPromise.then(() => {
-      if (element) {
-        element.classList.remove('loading');
-      }
-    }).catch(err => {
-      if (element) {
-        element.classList.remove('loading');
-        // 视觉错误反馈
-        const originalBg = element.style.backgroundColor;
-        element.style.backgroundColor = '#d97a7a';
-        setTimeout(() => {
-          element.style.backgroundColor = originalBg || '';
-        }, 600);
-      }
+    playPromise.catch(err => {
       console.warn('Audio playback failed for number:', num, err);
+      // 播放失败时移除状态
+      if (element) {
+        element.classList.remove('playing');
+      }
     });
   }
   
   currentAudio = audio;
   if (element) {
-    document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-    element.classList.add('playing');
     audio.onended = () => { 
       element.classList.remove('playing'); 
     };
@@ -802,9 +736,6 @@ for (let row = 0; row < 10; row++) {
     
     td.appendChild(div);
     td.addEventListener('click', function(e) { 
-      // 触觉反馈
-      this.style.transform = 'scale(0.92)';
-      setTimeout(() => { this.style.transform = ''; }, 150);
       playAudio(parseInt(this.dataset.number, 10), this); 
     });
     tr.appendChild(td);
@@ -971,16 +902,11 @@ window.playCurrentAudio = playCurrentAudio;
 document.getElementById('scoreDetail').style.display = 'block';
 updateScore();
 
-// 先检查是否已预加载，再决定是否显示加载状态
-if (hasPreloadedBefore()) {
-  const preloadStatus = document.getElementById('preloadStatus');
-  if (preloadStatus) preloadStatus.style.display = 'none';
-  console.log('📢 Using cached audio');
+// 后台预加载 - 完全不显示在页面上
+if (!hasPreloadedBefore()) {
+  setTimeout(preloadAllAudio, 1000);
 } else {
-  // 延迟预加载
-  setTimeout(() => {
-    preloadAllAudio();
-  }, 500);
+  console.log('📢 Using cached audio (preloaded before)');
 }
 
 // 启动第一个题目
