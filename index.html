@@ -146,7 +146,7 @@
       line-height: 1.2;
       padding: 0.1rem 0;
       position: relative;
-      pointer-events: none;  /* 让所有点击穿透到 td */
+      pointer-events: none;
       width: 100%;
       height: 100%;
     }
@@ -177,7 +177,7 @@
       opacity: 0.7;
       line-height: 1;
       transition: color 0.15s;
-      pointer-events: none;  /* 关键：让点击穿透到 td */
+      pointer-events: none;
     }
 
     .test-wrapper {
@@ -577,12 +577,11 @@ function buildNumberData() {
 const numberData = buildNumberData();
 
 // ============================================================
-//  2. AUDIO PLAYBACK - 后台预加载
+//  2. AUDIO PLAYBACK
 // ============================================================
 let currentAudio = null;
 const audioCache = new Map();
 let isPreloading = false;
-let activePlayingCell = null;
 
 function getAudioUrl(num) { return `${AUDIO_BASE_URL}${num}${AUDIO_EXT}`; }
 
@@ -639,28 +638,10 @@ function preloadAllAudio() {
 }
 
 // ============================================================
-//  3. 核心点击处理 - 统一使用 touchstart + click
+//  3. 核心点击处理 - 使用 mousedown + touchstart（比 click 更快）
 // ============================================================
 function clearAllPlaying() {
   document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-  activePlayingCell = null;
-}
-
-function handleCellTap(td) {
-  if (!td) return;
-  
-  const num = parseInt(td.dataset.number, 10);
-  if (isNaN(num)) return;
-  
-  // 1. 清除其他单元格的 playing 状态
-  clearAllPlaying();
-  
-  // 2. 立即给当前单元格添加 playing 状态
-  td.classList.add('playing');
-  activePlayingCell = td;
-  
-  // 3. 播放音频
-  playAudioOnly(num, td);
 }
 
 function playAudioOnly(num, element) {
@@ -689,23 +670,36 @@ function playAudioOnly(num, element) {
   if (playPromise !== undefined) {
     playPromise.catch(err => {
       console.warn('Audio playback failed for number:', num, err);
-      // 播放失败时移除样式
       if (element) {
         element.classList.remove('playing');
-        activePlayingCell = null;
       }
     });
   }
   
   currentAudio = audio;
   
-  // 音频结束后移除样式
   audio.onended = function() {
     if (element) {
       element.classList.remove('playing');
-      activePlayingCell = null;
     }
   };
+}
+
+// 核心点击函数：立即添加样式 + 播放音频
+function handleCellInteraction(td) {
+  if (!td) return;
+  
+  const num = parseInt(td.dataset.number, 10);
+  if (isNaN(num)) return;
+  
+  // 清除其他样式
+  clearAllPlaying();
+  
+  // 立即添加 playing 样式
+  td.classList.add('playing');
+  
+  // 播放音频
+  playAudioOnly(num, td);
 }
 
 // ============================================================
@@ -741,36 +735,26 @@ for (let row = 0; row < 10; row++) {
     
     td.appendChild(div);
     
-    // ===== 核心修复：使用 touchstart 立即响应 + click 备用 =====
-    // touchstart: 立即添加样式（所有设备都支持）
-    td.addEventListener('touchstart', function(e) {
-      // 不阻止默认行为，让 click 也能触发
-      // 但 touchstart 会先触发，立即显示样式
-      const num = parseInt(this.dataset.number, 10);
-      if (!isNaN(num)) {
-        // 清除其他样式
-        clearAllPlaying();
-        // 立即添加样式
-        this.classList.add('playing');
-        activePlayingCell = this;
-      }
-    }, { passive: true });
-    
-    // click: 播放音频（桌面端主要靠这个，移动端 touchstart 已经加了样式）
-    td.addEventListener('click', function(e) {
-      const num = parseInt(this.dataset.number, 10);
-      if (!isNaN(num)) {
-        // 如果 touchstart 已经加了样式，这里不再重复添加
-        // 但如果是从桌面端点击（没有 touchstart），需要添加样式
-        if (!this.classList.contains('playing')) {
-          clearAllPlaying();
-          this.classList.add('playing');
-          activePlayingCell = this;
-        }
-        // 播放音频
-        playAudioOnly(num, this);
-      }
+    // ===== 使用 pointerdown 代替 click，响应更快 =====
+    // pointerdown 在桌面和移动端都支持，且比 click 快
+    td.addEventListener('pointerdown', function(e) {
+      // 阻止默认行为，避免触发 click 或滚动
+      e.preventDefault();
+      handleCellInteraction(this);
     });
+    
+    // 兼容不支持 pointerdown 的旧浏览器（但现代浏览器都支持）
+    // 同时保留 touchstart 作为 fallback（但 pointerdown 已经覆盖了触摸）
+    if (!window.PointerEvent) {
+      td.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        handleCellInteraction(this);
+      }, { passive: false });
+      
+      td.addEventListener('mousedown', function(e) {
+        handleCellInteraction(this);
+      });
+    }
     
     tr.appendChild(td);
   }
@@ -782,9 +766,10 @@ document.querySelectorAll('thead th').forEach((th, i) => {
   if (i === 0) return;
   const d = i - 1;
   th.style.cursor = 'pointer';
-  th.addEventListener('click', () => {
+  th.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
     const target = document.querySelector(`td[data-number="${d}"]`);
-    if (target) target.click();
+    if (target) handleCellInteraction(target);
   });
 });
 
@@ -792,9 +777,10 @@ document.querySelectorAll('thead th').forEach((th, i) => {
 document.querySelectorAll('tbody th').forEach((th) => {
   const ten = parseInt(th.textContent, 10);
   th.style.cursor = 'pointer';
-  th.addEventListener('click', () => {
+  th.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
     const target = document.querySelector(`td[data-number="${ten*10}"]`);
-    if (target) target.click();
+    if (target) handleCellInteraction(target);
   });
 });
 
@@ -925,7 +911,21 @@ function playCurrentAudio() {
     return;
   }
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
-  playAudioOnly(currentQuestion.num, null);
+  // 测验模式：只播放音频，不控制表格样式
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  const url = getAudioUrl(currentQuestion.num);
+  let audio = audioCache.get(url);
+  if (!audio) {
+    audio = new Audio(url);
+    audio.preload = 'metadata';
+    audioCache.set(url, audio);
+  }
+  audio.currentTime = 0;
+  audio.play().catch(err => console.warn('Quiz audio failed:', err));
+  currentAudio = audio;
 }
 
 // ============================================================
