@@ -109,12 +109,11 @@
     tbody td { background-color: #f7fcff; }
     tbody tr:nth-child(odd) td { background-color: #e5f2fa; }
     
-    /* 悬停效果 - 只在非触摸设备生效 */
     @media (hover: hover) {
       td:hover { background: #c5e4f5 !important; }
     }
     
-    /* 基础样式 - 所有状态都通过 JS 控制 class */
+    /* 所有状态通过 class 控制 */
     td.playing { 
       background: #4a9abf !important; 
       color: white !important;
@@ -351,10 +350,6 @@
       text-align: center;
     }
 
-    /* ============================================================
-       📱 响应式断点
-       ============================================================ */
-
     @media (max-width: 1024px) {
       body { padding: 0.8rem; }
       .container { padding: 0; }
@@ -480,7 +475,6 @@
       .arabic-number { font-size: 0.7rem; }
     }
 
-    /* 触摸设备优化 */
     @media (hover: none) and (pointer: coarse) {
       .mode-tab, .btn, .option-btn, .play-btn-plain, th, td {
         min-height: 44px;
@@ -596,7 +590,6 @@ function markPreloadedComplete() {
   try { localStorage.setItem(PRELOAD_KEY, 'true'); } catch {}
 }
 
-// 后台预加载
 function preloadAllAudio() {
   if (isPreloading || hasPreloadedBefore()) return;
   isPreloading = true;
@@ -641,9 +634,8 @@ function preloadAllAudio() {
   loadBatch(0);
 }
 
-// 核心播放函数 - 同时处理样式
-function playAudio(num, element) {
-  // 停止当前播放
+// 核心播放函数 - 只负责音频，样式由调用方控制
+function playAudioOnly(num, element, callback) {
   if (currentAudio) { 
     currentAudio.pause(); 
     currentAudio.currentTime = 0; 
@@ -664,38 +656,42 @@ function playAudio(num, element) {
   
   audio.currentTime = 0;
   
-  // ===== 样式控制：先清除所有 playing 状态 =====
-  document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-  
-  // ===== 立即给当前元素添加 playing 状态（深蓝色背景 + 白色文字） =====
-  if (element) {
-    element.classList.add('playing');
-  }
-  
-  // 播放音频
   const playPromise = audio.play();
   
   if (playPromise !== undefined) {
     playPromise.catch(err => {
       console.warn('Audio playback failed for number:', num, err);
-      // 播放失败时移除状态
-      if (element) {
-        element.classList.remove('playing');
-      }
+      if (callback) callback(false);
     });
   }
   
   currentAudio = audio;
-  if (element) {
-    audio.onended = () => { 
-      element.classList.remove('playing'); 
-    };
+  if (callback) {
+    audio.onended = () => { callback(true); };
   }
 }
 
 // ============================================================
-//  3. RENDER TABLE
+//  3. RENDER TABLE - 点击处理样式和音频分离
 // ============================================================
+function handleCellClick(td) {
+  const num = parseInt(td.dataset.number, 10);
+  
+  // 先清除其他单元格的 playing 状态
+  document.querySelectorAll('.playing').forEach(el => {
+    if (el !== td) el.classList.remove('playing');
+  });
+  
+  // 立即给当前单元格添加 playing 状态（深蓝色背景 + 白色文字）
+  td.classList.add('playing');
+  
+  // 播放音频
+  playAudioOnly(num, td, function(success) {
+    // 播放结束后移除状态
+    td.classList.remove('playing');
+  });
+}
+
 const tbody = document.getElementById('tableBody');
 for (let row = 0; row < 10; row++) {
   const tr = document.createElement('tr');
@@ -726,23 +722,17 @@ for (let row = 0; row < 10; row++) {
     
     td.appendChild(div);
     
-    // 点击事件 - 使用 touchstart 和 click 双重保障移动端响应
-    td.addEventListener('click', function(e) { 
-      playAudio(parseInt(this.dataset.number, 10), this); 
+    // 使用统一的点击处理
+    td.addEventListener('click', function(e) {
+      handleCellClick(this);
     });
-    // 移动端触摸时立即添加视觉反馈
-    td.addEventListener('touchstart', function(e) {
-      // 不阻止默认行为，让 click 也能触发
-      // 预先添加 playing 样式以获得即时反馈
-      document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
-      this.classList.add('playing');
-    }, { passive: true });
     
     tr.appendChild(td);
   }
   tbody.appendChild(tr);
 }
 
+// 表头点击
 document.querySelectorAll('thead th').forEach((th, i) => {
   if (i === 0) return;
   const d = i - 1;
@@ -753,6 +743,7 @@ document.querySelectorAll('thead th').forEach((th, i) => {
   });
 });
 
+// 行标签点击
 document.querySelectorAll('tbody th').forEach((th) => {
   const ten = parseInt(th.textContent, 10);
   th.style.cursor = 'pointer';
@@ -889,8 +880,8 @@ function playCurrentAudio() {
     return;
   }
   document.getElementById('testStatus').innerHTML = '<span id="statusText">🔊 Playing audio, please select the correct answer...</span>';
-  // 测验模式下不需要高亮表格单元格，传 null
-  playAudio(currentQuestion.num, null);
+  // 测验模式：只播放音频，不控制表格样式
+  playAudioOnly(currentQuestion.num, null, null);
 }
 
 // ============================================================
@@ -903,7 +894,6 @@ window.playCurrentAudio = playCurrentAudio;
 document.getElementById('scoreDetail').style.display = 'block';
 updateScore();
 
-// 后台预加载
 if (!hasPreloadedBefore()) {
   setTimeout(preloadAllAudio, 1000);
 } else {
